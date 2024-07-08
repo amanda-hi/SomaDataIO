@@ -45,7 +45,99 @@ can be performed using the `SomaDataIO` package.
 
 ## Filtering Features
 
-Coming soon...
+The goal of this pre-processing step is to remove unnecessary protein features 
+from a SomaScan dataset, while also retaining *relevant* features that will 
+enable broad discovery during downstream analysis.
+
+The filtering logic typically used for protein features (i.e. SOMAmer reagents) 
+can be represented as:
+
+```
+Type == "Protein" & Organism == "Human"
+```
+
+These two conditions indicate that only **human protein** features from the 
+raw ADAT should be retained when performing this filtering step. This can be 
+accomplished by filtering on the ADAT `Type` attribute, which represents the 
+SOMAmer target type. This will be used in conjunction with the `Organism` 
+attribute, which represents the organism from which the protein originated. 
+
+These two attributes (`Type` and `Organism`) can be accessed via
+`SomaDataIO::getAnalyteInfo()`. This function retrieves the analyte annotation 
+data (i.e. the column metadata, or `COL_DATA`) that appears above the protein 
+measurements in the ADAT file, and returns it in a `data.frame` format. 
+
+*Note: for more information about the format and content of an ADAT, please* 
+*reference the*
+[SomaLogic-Data](https://github.com/SomaLogic/SomaLogic-Data) *GitHub repository.*
+
+To retrieve the column metadata annotations for the data set:
+
+```{r}
+annots <- getAnalyteInfo(example_data)
+```
+
+We can now check the contents of the `Type` and `Organism` attributes, 
+which can be accessed as columns of a data frame once extracted with
+`getAnalyteInfo()`:
+
+```{r}
+table(annots$Type)
+table(annots$Organism)
+```
+
+As described in the filtering strategy above, we only want to retain the 
+features for which `Type == "Protein"`, indicating that the feature is related 
+to a human protein. In the same filtering step, we can also specify that we 
+only want to retain proteins found in humans (`Organism == "Human")`. This can 
+be performed using `dplyr::filter()`:
+
+```{r}
+human_prots <- getAnalyteInfo(example_data) |>
+  filter(Type == "Protein" & Organism == "Human")
+
+length(human_prots$SeqId)
+```
+
+The original dataset (`example_adat`) contained `r nrow(getAnalyteInfo(example_data))`
+analytes; after filtering for human proteins and removing 
+`r nrow(getAnalyteInfo(example_data)) - length(human_prots$SeqId)` non-human 
+features, it contains `r length(human_prots$SeqId)` analytes.
+
+Remember that the `human_prots` object is not an ADAT, but rather a `data.frame` 
+representing the column metadata that corresponds to the `example_data` ADAT 
+object. We must now filter the `example_data` object to match the filtering 
+performed on the `human_prots` object.
+
+```{r}
+# Identify SeqIds that differ between the data sets
+discard <- setdiff(grep("^seq\\.", colnames(example_data), value = TRUE), 
+                   human_prots$AptName)
+
+# Discard non-human, non-protein features
+filt_data <- example_data |>
+  dplyr::select(-all_of(discard))
+```
+
+This data set now contains only human proteins. 
+
+### Flagged Features
+
+Our filtered ADAT `filt_data` contains a single column, called `RowCheck`, that 
+is often used for filtering ADAT datasets. This column contains the normalization 
+acceptance criteria for all *rowwise* scale factors (please see
+[SomaLogic-Data](https://github.com/SomaLogic/SomaLogic-Data) for more details).
+
+```{r}
+table(filt_data$RowCheck)
+```
+
+Two values in `filt_data` failed this row check, and are marked with a `FLAG` 
+value. However, these features **should not** be filtered out of the data set 
+at this step; within any given study, SOMAmer reagents with a `FLAG` status can 
+still yield useful information downstream in the analysis. As such, SomaLogic 
+does not recommend removing these samples until indicated later in this workflow.
+
 
 ---------------
 
