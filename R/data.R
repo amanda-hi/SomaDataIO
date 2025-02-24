@@ -109,3 +109,51 @@
 #' # Age Variable
 #' summary(example_data$Age)
 NULL
+
+
+#' GO Term to SeqId Mapping Object
+#'
+#' List containing SeqIds associated with terms from the Gene Ontology (GO)
+#' database. Currently limited to the Biological Process and Molecular function
+#' aspects.
+#' @name go2seqid
+#' @docType data
+#' @source \url{https://geneontology.org/}
+#' @keywords datasets
+#' @examples
+#' names(go2seqid)
+#'
+#' # GO biological process (BP)
+#' head(go2seqid$biological_process, n = 3)
+#'
+#' head(go2seqid$molecular_function, n = 3)
+NULL
+
+
+#' MSigDB Gene Set to SeqId Mapping Object
+#'
+#' List containing SeqIds associated with gene sets from the Molecular
+#' Signatures Database (MSigDB).
+#' @name msig2seqid
+#' @docType data
+#' @source \url{https://www.gsea-msigdb.org/gsea/msigdb}
+#' @keywords datasets
+#' @examples
+#' names(msig2seqid)
+#'
+#' # GO biological process (BP)
+#' head(msig2seqid$MSigDB_oncogenic_signature, n = 3)
+NULL
+
+
+#' t-test Example Data
+#'
+#' Results of performing a t-test with an example SomaScan dataset.
+#' See the SomaDataIO "Two-Group Comparison" workflow for details.
+#' @name t_tests
+#' @docType data
+#' @source Standard BioTools, Inc.
+#' @keywords datasets
+#' @examples
+#' head(t_tests)
+NULL
